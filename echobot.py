@@ -7,27 +7,29 @@ furhat = FurhatRemoteAPI("localhost")
 # Get the voices on the robot
 voices = furhat.get_voices()
 
+#print(voices)
 
 # Set the voice of the robot
 furhat.set_voice(name='Hans')
 
 # Begrüßung
-furhat.say(text="Hallo wer sind sie?")
+furhat.say(text="Hallo, wer sind Sie?")  # Warten, bis das Sprechen beendet ist
 
-# Fokus auf den benutzer mit geringster entfernung
+# Fokus auf den Benutzer mit geringster Entfernung
 furhat.attend(user="CLOSEST")
 
 while True:
-    time.sleep(2)
+    time.sleep(3)
+    furhat.gesture(name="BigSmile")
     # Listen to user speech and return ASR result
-    result = furhat.listen(language="de-DE")
+    result = furhat.listen(language="de-DE")  # Blockieren bis Hören beendet ist
 
     # Check if the user wants to stop the conversation
-    if result.message == "stopp":
+    if result.message == "Stopp":
         print("User stopped the conversation")
         break
 
     # Echo only the user's speech
-    furhat.say(text=result.message)
+    furhat.say(text=result.message)  # Warten, bis das Sprechen beendet ist
     
 furhat.say(text="Tschüss")
