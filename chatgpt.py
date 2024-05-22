@@ -1,50 +1,47 @@
 from furhat_remote_api import FurhatRemoteAPI
-import openai
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-#Verbindung zur Furhat Remote API aufbauen
-furhat = FurhatRemoteAPI("localhost")
-
-voices = furhat.get_voices()
-
-furhat.set_voice(name='Marlene')
-
-#API einbinden
-openai.api_key = os.getenv("API_KEY")
+from openai import OpenAI
 
 # Prompt aus Textdatei in Variable speichern
-with open('./prompt.txt', 'r', encoding='utf-8') as file:
+with open("./prompt.txt", "r", encoding="utf-8") as file:
     prompt = file.read()
 
-message = [{"role": "user", "content": prompt}]
+# Verbindung zur Furhat Remote API aufbauen
+furhat = FurhatRemoteAPI("localhost")
+furhat.set_voice(name="Marlene")
+print("Status - Furhat Remote API verbunden")
 
-# ChatGPT anfrage mit dem Prompt erstellen
-response = openai.ChatCompletion.create(
+
+# Verbindung zur OpenAI API aufbauen
+client = OpenAI()
+print("Status - OpenAI API verbunden")
+
+# Assistant erstellen (Für Chatverlauf)
+assistant = client.beta.assistants.create(
+    name="Maria Vogel",
+    instructions=prompt,
     model="gpt-4o",
-    messages=message
 )
+print("Status - Assistant erstellt")
 
-# Antwort wird rausgefiltert und in openai_response speichern
-openai_response = response['choices'][0]['message']['content'].strip()
-furhat.say(text=openai_response, blocking = True)
+# Thread erstellen (Fürs bearbeiten des Chatverlaufs)
+thread = client.beta.threads.create()
+print("Status - Thread erstellt")
 
-
+print("Status - Chat beginnt\n")
 while True:
-    # TO-DO: Dafür sorgen dass Furhat erst dann anfängt zu hören wenn er fertig geredet hat. HINWEIS: Parameter Blocking anschauen
-    # Furhat hört zu und das gesagte wird in result gespeichert
-    #result = furhat.listen(language="de-DE")  
-    anfrage = input("Helf Maria: ")
-    # ChatGPT Anfrage mit Result erstellen
-    message.append({"role": "user", "content": anfrage})
-    response = openai.ChatCompletion.create(
-    model="gpt-4o",
-    messages=message
-    )
-
-    # Antwort wird rausgefiltert und in openai_response gespeichert
-    openai_response = response['choices'][0]['message']['content'].strip()
-
-    # Furhat sagt die antwort
-    furhat.say(text=openai_response)
+    request = furhat.listen(language="de-DE")
+    if request.message:
+        print("Nutzer: " + request.message)
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id, role="user", content=request.message
+        )
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=assistant.id,
+        )
+        messages = client.beta.threads.messages.list(thread_id=thread.id)
+        response = messages.data[0].content[0].text.value
+        print("Maria Vogel: " + response)
+        furhat.say(text=response, blocking=True)
+    else:
+        print("Nutzer hat nichts gesagt")
