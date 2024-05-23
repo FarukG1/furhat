@@ -1,5 +1,12 @@
 from furhat_remote_api import FurhatRemoteAPI
 from openai import OpenAI
+import atexit
+
+def delete_assistant(assistant_id):
+    """Delete the assistant"""
+    status = client.beta.assistants.delete(assistant_id)
+    print(status)
+
 
 # Prompt aus Textdatei in Variable speichern
 with open("./prompt.txt", "r", encoding="utf-8") as file:
@@ -9,7 +16,6 @@ with open("./prompt.txt", "r", encoding="utf-8") as file:
 furhat = FurhatRemoteAPI("localhost")
 furhat.set_voice(name="Marlene")
 print("Status - Furhat Remote API verbunden")
-
 
 # Verbindung zur OpenAI API aufbauen
 client = OpenAI()
@@ -28,6 +34,7 @@ thread = client.beta.threads.create()
 print("Status - Thread erstellt")
 
 print("Status - Chat beginnt\n")
+atexit.register(delete_assistant, assistant.id)
 while True:
     request = furhat.listen(language="de-DE")
     if request.message:
