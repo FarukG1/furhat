@@ -1,7 +1,8 @@
-from furhat_remote_api import FurhatRemoteAPI
-from openai import OpenAI
 import atexit
 import re
+
+from furhat_remote_api import FurhatRemoteAPI
+from openai import OpenAI
 
 # Terminal Farben
 class Colors:
