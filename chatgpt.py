@@ -1,3 +1,5 @@
+"""Skript: Chatbot mit Furhat und OpenAI GPT-4o."""
+
 import atexit
 import re
 
